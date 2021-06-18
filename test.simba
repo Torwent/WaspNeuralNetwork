@@ -1,0 +1,24 @@
+{$I neuralnetwork.simba}
+
+//Missing loss functions
+
+var
+  X: T2DExtendedArray;
+  Y: TExtendedArray;
+
+  Layer1: TLayerDense;
+  Layer2: TLayerDense;
+
+  Output: T2DExtendedArray;
+
+begin
+
+  Layer1.Init(2, 3);
+  Layer2.Init(3, 3);
+
+  CreateSpiralData(100, 3, X, Y);
+
+  Output := ActivationSoftmax(Layer2.Run(ActivationReLu(Layer1.Run(X))));
+
+  Writeln(Output);
+end;
