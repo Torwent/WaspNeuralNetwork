@@ -1,0 +1,352 @@
+const
+  STR_NEW_LINE: String = ''#13#10'';
+  E: Extended = 2.7182818284590452353602874713527;
+
+
+function nzRandom(): Extended;
+begin
+  if SizeOf(Extended) = 10 then
+    Result := Max(Random(), 1.0e-4900) //10^-4900 seems to be our safe limit
+  else
+    Result := Max(Random(), 1.0e-320);
+end;
+
+function GaussRand(Mean, Dev: Double): Extended; static;
+var
+  len: Extended;
+begin
+  len := Dev * Sqrt(-2 * Ln(nzRandom()));
+  Result := Mean + len * Cos(2 * PI * Random());
+end;
+
+
+
+function DotProduct(A: TExtendedArray; B: Extended): Extended;
+var
+  i: Int32;
+begin
+  Result := 0;
+  for i := 0 to High(A) do
+    Result := Result + (A[i] * B);
+end;
+
+function DotProduct(A, B: TExtendedArray): Extended; overload;
+var
+  i: Int32;
+begin
+  if Length(A) <> Length(B) then
+    RaiseException('Not the same shape!');
+
+  Result := 0;
+  for i := 0 to High(A) do
+    Result := Result + (A[i] * B[i]);
+end;
+
+function DotProduct(A: T2DExtendedArray; B: TExtendedArray): TExtendedArray; overload;
+var
+  i: Int32;
+begin
+  for i := 0 to High(A) do
+    Result += DotProduct(A[i], B);
+end;
+
+function DotProduct(A, B: T2DExtendedArray): T2DExtendedArray; overload;
+var
+  i: Int32;
+  i2: Int32;
+  innerArr: TExtendedArray;
+begin
+  if Length(A) <> Length(B) then
+    RaiseException('Not the same shape!');
+
+  for i := 0 to High(A) do
+  begin
+    innerArr := [];
+    for i2 := 0  to High(B) do
+      innerArr += DotProduct(A[i], B[i2]);
+    Result += innerArr;
+  end;
+end;
+
+
+
+function TExtendedArray.Sum: Extended;
+var
+  Value: Extended;
+begin
+  for Value in Self do
+    Result += Value;
+end;
+
+function T2DExtendedArray.Sum: TExtendedArray;
+var
+  Arr: TExtendedArray;
+begin
+  for Arr in Self do
+    Result += Arr.Sum;
+end;
+
+
+
+function SumArray(A: TExtendedArray; B: Extended): TExtendedArray; overload;
+var
+  i: Int32;
+begin
+  for i := 0 to High(A) do
+    Result += A[i] + B;
+end;
+
+function SumArray(A, B: TExtendedArray): TExtendedArray; overload;
+var
+  i: Int32;
+begin
+  for i := 0 to High(A) do
+    Result += A[i] + B[i];
+end;
+
+function SumArray(A: T2DExtendedArray; B: Extended): T2DExtendedArray; overload;
+ var
+  i: Int32;
+begin
+  for i := 0 to High(A) do
+    Result += SumArray(A[i], B);
+end;
+
+function SumArray(A: T2DExtendedArray; B: TExtendedArray): T2DExtendedArray; overload;
+var
+  i: Int32;
+begin
+  for i := 0 to High(A) do
+    Result += SumArray(A[i], B);
+end;
+
+function SumArray(A, B: T2DExtendedArray): T2DExtendedArray; overload;
+var
+  i: Int32;
+begin
+  for i := 0 to High(A) do
+    Result += SumArray(A[i], B[i]);
+end;
+
+
+function TransposeArray(Arr: T2DExtendedArray): T2DExtendedArray;
+var
+  i: Int32;
+  i2: Int32;
+  innerArr: TExtendedArray;
+begin
+  for i := 0 to High(Arr[0]) do
+  begin
+    innerArr := [];
+    for i2 := 0 to High(Arr) do
+      innerArr += Arr[i2][i];
+    Result += innerArr;
+  end;
+end;
+
+
+
+function RandomArray(ShapeX: Int32): TExtendedArray;
+begin
+  for 0 to ShapeX do
+    Result += GaussRand(0, 1);
+end;
+
+function LineSpace(Start, Finish: Extended; Steps: Int32): TExtendedArray;
+var
+  Size: Extended;
+  StepSize: Extended;
+  i: Int32;
+begin
+  Size := Finish - Start;
+
+  StepSize := Size/(Steps - 1);
+  for i := 0 to (Steps - 1) do
+    Result += Start + (StepSize * i);
+end;
+
+
+function SinArray(A: TExtendedArray): TExtendedArray;
+var
+  i: Extended;
+begin
+  for i in A do
+    Result += Sin(i);
+end;
+
+function SinArray(A: TExtendedArray; Multiplier: Extended): TExtendedArray; overload;
+var
+  i: Extended;
+begin
+  for i in A do
+    Result += Sin(i * Multiplier);
+end;
+
+function CosArray(A: TExtendedArray): TExtendedArray;
+var
+  i: Extended;
+begin
+  for i in A do
+    Result += Cos(i);
+end;
+
+function CosArray(A: TExtendedArray; Multiplier: Extended): TExtendedArray; overload;
+var
+  i: Extended;
+begin
+  for i in A do
+    Result += Cos(i * Multiplier);
+end;
+
+
+
+function TExtendedArray.Normalize: TExtendedArray;
+var
+  NormBase: Extended := Self.Sum;
+  Value: Extended;
+begin
+  for Value in Self do
+    Result += Value / NormBase;
+end;
+
+function T2DExtendedArray.Normalize: T2DExtendedArray;
+var
+  Arr: TExtendedArray;
+begin
+  for Arr in Self do
+    Result += Arr.Normalize;
+end;
+
+
+function TExtendedArray.Exponentiate: TExtendedArray;
+var
+  Value: Extended;
+begin
+  for Value in Self do
+    Result += E ** Value;
+end;
+
+function T2DExtendedArray.Exponentiate: T2DExtendedArray;
+var
+  Value: TExtendedArray;
+begin
+  for Value in Self do
+    Result += Value.Exponentiate;
+end;
+
+
+
+procedure CreateSpiralData(NPoints, NClasees: Int32; out  Points: T2DExtendedArray; out Classes: TExtendedArray);
+var
+  ClassNumber: Int32;
+  Radius: TExtendedArray := LineSpace(0.0, 1.00, NPoints);
+  t: TExtendedArray;
+begin
+  for ClassNumber := 0 to (NClasees - 1) do
+  begin
+    for 1 to (NPoints) do
+    begin
+      t := SumArray(
+            LineSpace(ClassNumber * 4, (ClassNumber + 1) * 4, NPoints),
+            RandomArray(NPoints));
+      Points += [DotProduct(SinArray(t, 2.5), Radius),
+                 DotProduct(CosArray(t, 2.5), Radius)];
+      Classes += ClassNumber;
+    end;
+  end;
+end;
+
+
+
+// Rectified linear unit activation function
+function ActivationReLu(A: TExtendedArray): TExtendedArray;
+var
+  i: Extended;
+begin
+  for i in A do
+    if i > 0 then Result += i
+    else Result += 0;
+end;
+
+function ActivationReLu(A: T2DExtendedArray): T2DExtendedArray; overload;
+var
+  i: TExtendedArray;
+begin
+  for i in A do
+    Result += ActivationReLu(i);
+end;
+
+
+
+
+// Softmax activation function
+function ActivationSoftmax(Input: TExtendedArray): TExtendedArray;
+var
+  Exponentiated: TExtendedArray;
+begin
+  Exponentiated := Input.Exponentiate;
+  Result := Exponentiated.Normalize;
+end;
+
+function ActivationSoftmax(Input: T2DExtendedArray): T2DExtendedArray; overload;
+var
+  i: TExtendedArray;
+begin
+  for i in Input do
+    Result += ActivationSoftmax(i);
+end;
+
+
+
+//Actual neural network starts here
+type
+  TNeuron = record
+    Weights: TExtendedArray;
+    Bias: Extended;
+  end;
+
+  TLayerDense = record
+    Neurons: array of TNeuron;
+  end;
+
+procedure TNeuron.Init(NInputs: Int32);
+begin
+    for 1 to NInputs do
+      Weights += 0.1 * GaussRand(0, 1);
+
+    Bias := 0.00;
+end;
+
+function TNeuron.Run(Input: TExtendedArray): Extended;
+begin
+  Result := DotProduct(Input, Weights) + Bias;
+end;
+
+
+procedure TLayerDense.Init(NInputs, NNeurons: Int32);
+var
+  Neuron: TNeuron;
+begin
+  for 1 to NNeurons do
+  begin
+    Neuron := [];
+    Neuron.Init(NInputs);
+    Neurons += Neuron;
+  end;
+end;
+
+function TLayerDense.Run(Inputs: T2DExtendedArray): T2DExtendedArray;
+var
+  Neuron: TNeuron;
+  Input: TExtendedArray;
+  InnerResult: TExtendedArray;
+begin
+  for Input in Inputs do
+  begin
+    InnerResult := [];
+    for Neuron in Neurons do
+      InnerResult += Neuron.Run(Input);
+    Result += InnerResult;
+  end;
+end;
+
